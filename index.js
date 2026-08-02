@@ -17,7 +17,7 @@ const client = new Client({
 
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = '1533233042250928348';
-const GEMINI_API_KEY = 'AQ.Ab8RN6JxoQm3zt3ywsmuR4RkizxwSgYFDSOqq3rH1My-1ufX5wAQ.Ab8RN6JxoQm3zt3ywsmuR4RkizxwSgYFDSOqq3rH1My-1ufX5w';
+const GEMINI_API_KEY = 'AQ.Ab8RN6Lv2LoVHilSo77uA0V5MP_QYP5ce7eD5QoFobNz_hbM5A';
 const DB_PATH = path.join(__dirname, 'database.json');
 
 // --- DATABASE & STATE ---
@@ -114,7 +114,7 @@ async function getGeminiResponse(prompt) {
 
         const options = {
             hostname: 'generativelanguage.googleapis.com',
-            path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+            path: `/v1beta/models/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`,
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         };

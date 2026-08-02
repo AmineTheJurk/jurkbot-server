@@ -1,5 +1,6 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
@@ -16,6 +17,7 @@ const client = new Client({
 
 const TOKEN = process.env.TOKEN;
 const CLIENT_ID = '1533233042250928348';
+const OPENAI_API_KEY = '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';
 const DB_PATH = path.join(__dirname, 'database.json');
 
 // --- DATABASE & STATE ---
@@ -54,28 +56,22 @@ function getProfile(userId) {
 }
 
 const commands = [
-    new SlashCommandBuilder().setName('roulette').setDescription('Play Russian Roulette (50/50 chance)! Costs 1 coin.'),
-    new SlashCommandBuilder().setName('daily').setDescription('Claim your 10 daily coins! (Every 4 hours)'),
-    new SlashCommandBuilder().setName('work').setDescription('Work to earn 50 coins! (Every 10 minutes)'),
-    new SlashCommandBuilder().setName('bank').setDescription('Check your cash, bank balance, and net worth.'),
-    new SlashCommandBuilder().setName('deposit').setDescription('Deposit coins into the bank.')
-        .addIntegerOption(o => o.setName('amount').setDescription('Amount of coins to deposit').setRequired(true)),
-    new SlashCommandBuilder().setName('withdraw').setDescription('Withdraw coins from the bank.')
-        .addIntegerOption(o => o.setName('amount').setDescription('Amount of coins to withdraw').setRequired(true)),
-    new SlashCommandBuilder().setName('give').setDescription('Send coins to another player.')
-        .addUserOption(o => o.setName('user').setDescription('User to give coins to').setRequired(true))
-        .addIntegerOption(o => o.setName('amount').setDescription('Amount of coins').setRequired(true)),
-    new SlashCommandBuilder().setName('shop').setDescription('View items available in the shop.'),
-    new SlashCommandBuilder().setName('buy').setDescription('Buy an item from the shop.')
-        .addStringOption(o => o.setName('item').setDescription('Item to buy').setRequired(true).addChoices(
-            { name: 'Watch a film (50 coins)', value: 'film' },
-            { name: 'Admin Role (1000 coins)', value: 'admin_role' },
-            { name: 'Crash Bot (10000 coins)', value: 'crash_bot' },
-            { name: 'Turn back on JurkBot! (1000 coins)', value: 'turn_on' }
-        )),
-    new SlashCommandBuilder().setName('revive').setDescription('Revive a ghost player (Removes Ghost role or Timeout).')
-        .addUserOption(o => o.setName('user').setDescription('User to revive').setRequired(true)),
-    new SlashCommandBuilder().setName('leaderboard').setDescription('See who has the highest roulette survival streak!'),
+    new SlashCommandBuilder().setName('roulette').setDescription('Play Russian Roulette!'),
+    new SlashCommandBuilder().setName('daily').setDescription('Claim 10 coins!'),
+    new SlashCommandBuilder().setName('work').setDescription('Work for 50 coins!'),
+    new SlashCommandBuilder().setName('bank').setDescription('Check balance.'),
+    new SlashCommandBuilder().setName('deposit').setDescription('Deposit coins.').addIntegerOption(o => o.setName('amount').setDescription('Amount of coins to deposit').setRequired(true)),
+    new SlashCommandBuilder().setName('withdraw').setDescription('Withdraw coins.').addIntegerOption(o => o.setName('amount').setDescription('Amount of coins to withdraw').setRequired(true)),
+    new SlashCommandBuilder().setName('give').setDescription('Send coins.').addUserOption(o => o.setName('user').setDescription('User to give coins to').setRequired(true)).addIntegerOption(o => o.setName('amount').setDescription('Amount of coins').setRequired(true)),
+    new SlashCommandBuilder().setName('shop').setDescription('View shop.'),
+    new SlashCommandBuilder().setName('buy').setDescription('Buy items.').addStringOption(o => o.setName('item').setDescription('Item to buy').setRequired(true).addChoices(
+        { name: 'Watch a film (50 coins)', value: 'film' },
+        { name: 'Admin Role (1000 coins)', value: 'admin_role' },
+        { name: 'Crash Bot (10000 coins)', value: 'crash_bot' },
+        { name: 'Turn back on JurkBot! (1000 coins)', value: 'turn_on' }
+    )),
+    new SlashCommandBuilder().setName('revive').setDescription('Revive a ghost.').addUserOption(o => o.setName('user').setDescription('User to revive').setRequired(true)),
+    new SlashCommandBuilder().setName('leaderboard').setDescription('Streaks leaderboard.'),
     // Troll Commands
     new SlashCommandBuilder().setName('takecontrol').setDescription('Send a command as another user (Admin only)')
         .addUserOption(o => o.setName('user').setDescription('User to control').setRequired(true))
@@ -84,20 +80,11 @@ const commands = [
         .addUserOption(o => o.setName('user').setDescription('User to mimick').setRequired(true))
         .addStringOption(o => o.setName('message').setDescription('Message to send').setRequired(true)),
     // Admin Commands
-    new SlashCommandBuilder().setName('ban').setDescription('Ban a user (Admin only)')
-        .addUserOption(o => o.setName('user').setDescription('User to ban').setRequired(true))
-        .addStringOption(o => o.setName('reason').setDescription('Reason for ban')),
-    new SlashCommandBuilder().setName('kick').setDescription('Kick a user (Admin only)')
-        .addUserOption(o => o.setName('user').setDescription('User to kick').setRequired(true))
-        .addStringOption(o => o.setName('reason').setDescription('Reason for kick')),
-    new SlashCommandBuilder().setName('warn').setDescription('Warn a user (Admin only)')
-        .addUserOption(o => o.setName('user').setDescription('User to warn').setRequired(true))
-        .addStringOption(o => o.setName('reason').setDescription('Reason for warning')),
-    new SlashCommandBuilder().setName('gimme').setDescription('Give yourself coins (Admin only)')
-        .addIntegerOption(o => o.setName('amount').setDescription('Amount to generate').setRequired(true)),
-    new SlashCommandBuilder().setName('remove').setDescription('Remove coins from a user (Admin only)')
-        .addUserOption(o => o.setName('user').setDescription('User target').setRequired(true))
-        .addIntegerOption(o => o.setName('amount').setDescription('Amount to remove').setRequired(true))
+    new SlashCommandBuilder().setName('ban').setDescription('Ban a user (Admin only)').addUserOption(o => o.setName('user').setDescription('User to ban').setRequired(true)).addStringOption(o => o.setName('reason').setDescription('Reason for ban')),
+    new SlashCommandBuilder().setName('kick').setDescription('Kick a user (Admin only)').addUserOption(o => o.setName('user').setDescription('User to kick').setRequired(true)).addStringOption(o => o.setName('reason').setDescription('Reason for kick')),
+    new SlashCommandBuilder().setName('warn').setDescription('Warn a user (Admin only)').addUserOption(o => o.setName('user').setDescription('User to warn').setRequired(true)).addStringOption(o => o.setName('reason').setDescription('Reason for warning')),
+    new SlashCommandBuilder().setName('gimme').setDescription('Give yourself coins (Admin only)').addIntegerOption(o => o.setName('amount').setDescription('Amount to generate').setRequired(true)),
+    new SlashCommandBuilder().setName('remove').setDescription('Remove coins from a user (Admin only)').addUserOption(o => o.setName('user').setDescription('User target').setRequired(true)).addIntegerOption(o => o.setName('amount').setDescription('Amount to remove').setRequired(true))
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
@@ -121,11 +108,52 @@ client.once('ready', async () => {
     }, 60000);
 });
 
+// Helper for ChatGPT
+async function getChatGPTResponse(prompt) {
+    return new Promise((resolve, reject) => {
+        const data = JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [{ role: "user", content: prompt }]
+        });
+
+        const options = {
+            hostname: 'api.openai.com',
+            path: '/v1/chat/completions',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                'Content-Length': data.length
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let body = '';
+            res.on('data', (chunk) => body += chunk);
+            res.on('end', () => {
+                try {
+                    const response = JSON.parse(body);
+                    if (response.choices && response.choices.length > 0) {
+                        resolve(response.choices[0].message.content);
+                    } else {
+                        resolve("❌ OpenAI Error: " + (response.error ? response.error.message : "Unknown error"));
+                    }
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        });
+
+        req.on('error', (e) => reject(e));
+        req.write(data);
+        req.end();
+    });
+}
+
 // Helper for Mimicking
 async function sendAsUser(interaction, user, content) {
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
     const channel = interaction.channel;
-
     let webhook = (await channel.fetchWebhooks()).find(wh => wh.name === "JurkBot-Troll");
     if (!webhook) {
         webhook = await channel.createWebhook({
@@ -133,7 +161,6 @@ async function sendAsUser(interaction, user, content) {
             avatar: client.user.displayAvatarURL(),
         });
     }
-
     await webhook.send({
         content: content,
         username: member ? member.displayName : user.username,
@@ -141,33 +168,47 @@ async function sendAsUser(interaction, user, content) {
     });
 }
 
-// --- MESSAGE LISTENER FOR OWNER DECISIONS ---
+// --- MESSAGE LISTENER ---
 client.on('messageCreate', async message => {
     if (message.author.bot) return;
-    const isOwner = message.guild.ownerId === message.author.id;
-    if (!isOwner || !activeConflict) return;
 
-    const response = message.content.toLowerCase();
+    // 1. ChatGPT Mode Logic
+    if (message.channel.name === 'chatgptmode' && message.mentions.has(client.user)) {
+        const prompt = message.content.replace(`<@${client.user.id}>`, '').replace(`<@!${client.user.id}>`, '').trim();
+        if (!prompt) return message.reply("Please provide a message!");
 
-    if (activeConflict.step === 1) {
-        if (response === 'yes' || response === 'y') {
-            activeConflict.step = 2;
-            return message.reply("whats this f3cking admin that REMOVED MONEY FROM HIM AFTER I GAVE HIM ADMIN can i kick him? pls?");
+        await message.channel.sendTyping();
+        try {
+            const response = await getChatGPTResponse(prompt);
+            return message.reply(response);
+        } catch (e) {
+            console.error(e);
+            return message.reply("❌ Failed to contact ChatGPT.");
         }
-    } else if (activeConflict.step === 2) {
-        const adminMember = await message.guild.members.fetch(activeConflict.adminId).catch(() => null);
-        if (response === 'yes' || response === 'y') {
-            if (adminMember) {
-                await adminMember.kick("Bot-Protector: Removed money from a temp-admin.").catch(() => message.reply("❌ Hierarchy error, can't kick him!"));
-                message.reply(`👢 Done! That bad admin is gone.`);
+    }
+
+    // 2. Owner Decisions (oui/non/yes/no)
+    const isOwner = message.guild.ownerId === message.author.id;
+    if (isOwner && activeConflict) {
+        const response = message.content.toLowerCase();
+        if (activeConflict.step === 1) {
+            if (response === 'yes' || response === 'y') {
+                activeConflict.step = 2;
+                return message.reply("whats this f3cking admin that REMOVED MONEY FROM HIM AFTER I GAVE HIM ADMIN can i kick him? pls?");
             }
-            activeConflict = null;
-        } else if (response === 'no' || response === 'n') {
-            message.reply("FAHYOU! :fahyou:");
-            db.isEvilMode = true;
-            db.evilModeEndTime = Date.now() + 3600000;
-            saveData();
-            activeConflict = null;
+        } else if (activeConflict.step === 2) {
+            const adminMember = await message.guild.members.fetch(activeConflict.adminId).catch(() => null);
+            if (response === 'yes' || response === 'y') {
+                if (adminMember) {
+                    await adminMember.kick("Bot-Protector").catch(() => message.reply("❌ Hierarchy error!"));
+                    message.reply(`👢 Done!`);
+                }
+                activeConflict = null;
+            } else if (response === 'no' || response === 'n') {
+                message.reply("FAHYOU! :fahyou:");
+                db.isEvilMode = true; db.evilModeEndTime = Date.now() + 3600000; saveData();
+                activeConflict = null;
+            }
         }
     }
 });
@@ -255,7 +296,7 @@ client.on('interactionCreate', async interaction => {
 
     // ================= REST =================
     if (interaction.commandName === 'gimme') {
-        if (!isAdmin) return await interaction.reply({ content: "❌ Admin only!", ephemeral: true });
+        if (!isAdmin) return await interaction.reply("❌ Admin only!");
         profile.cash += interaction.options.getInteger('amount');
         saveData(); await interaction.reply(`💰 Generated **${interaction.options.getInteger('amount')} coins** for yourself!`);
     }

@@ -55,13 +55,13 @@ const commands = [
     )),
     new SlashCommandBuilder().setName('revive').setDescription('Revive a ghost.').addUserOption(o => o.setName('user').setDescription('User').setRequired(true)),
     new SlashCommandBuilder().setName('leaderboard').setDescription('Streaks.'),
-    new SlashCommandBuilder().setName('takecontrol').setDescription('Control user (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('command').setRequired(true)),
-    new SlashCommandBuilder().setName('mimick').setDescription('Mimick user (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('message').setRequired(true)),
-    new SlashCommandBuilder().setName('ban').setDescription('Ban (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('reason')),
-    new SlashCommandBuilder().setName('kick').setDescription('Kick (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('reason')),
-    new SlashCommandBuilder().setName('warn').setDescription('Warn (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('reason')),
-    new SlashCommandBuilder().setName('gimme').setDescription('Gimme coins (Admin only)').addIntegerOption(o => o.setName('amount').setRequired(true)),
-    new SlashCommandBuilder().setName('remove').setDescription('Remove coins (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addIntegerOption(o => o.setName('amount').setRequired(true))
+    new SlashCommandBuilder().setName('takecontrol').setDescription('Control user (Admin only)').addUserOption(o => o.setName('user').setDescription('The user to control').setRequired(true)).addStringOption(o => o.setName('command').setDescription('The command to fake').setRequired(true)),
+    new SlashCommandBuilder().setName('mimick').setDescription('Mimick user (Admin only)').addUserOption(o => o.setName('user').setDescription('The user to mimick').setRequired(true)).addStringOption(o => o.setName('message').setDescription('The message to send').setRequired(true)),
+    new SlashCommandBuilder().setName('ban').setDescription('Ban (Admin only)').addUserOption(o => o.setName('user').setDescription('The user to ban').setRequired(true)).addStringOption(o => o.setName('reason').setDescription('The reason for the ban')),
+    new SlashCommandBuilder().setName('kick').setDescription('Kick (Admin only)').addUserOption(o => o.setName('user').setDescription('The user to kick').setRequired(true)).addStringOption(o => o.setName('reason').setDescription('The reason for the kick')),
+    new SlashCommandBuilder().setName('warn').setDescription('Warn (Admin only)').addUserOption(o => o.setName('user').setDescription('The user to warn').setRequired(true)).addStringOption(o => o.setName('reason').setDescription('The reason for the warning')),
+    new SlashCommandBuilder().setName('gimme').setDescription('Gimme coins (Admin only)').addIntegerOption(o => o.setName('amount').setDescription('Amount of coins to generate').setRequired(true)),
+    new SlashCommandBuilder().setName('remove').setDescription('Remove coins (Admin only)').addUserOption(o => o.setName('user').setDescription('Target user').setRequired(true)).addIntegerOption(o => o.setName('amount').setDescription('Amount of coins to remove').setRequired(true))
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);

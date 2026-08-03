@@ -43,8 +43,8 @@ const commands = [
     new SlashCommandBuilder().setName('daily').setDescription('Claim 10 coins!'),
     new SlashCommandBuilder().setName('work').setDescription('Work for 50 coins!'),
     new SlashCommandBuilder().setName('bank').setDescription('Check balance.'),
-    new SlashCommandBuilder().setName('deposit').setDescription('Deposit coins.').addIntegerOption(o => o.setName('amount').setDescription('Amount of coins to deposit').setRequired(true)),
-    new SlashCommandBuilder().setName('withdraw').setDescription('Withdraw coins.').addIntegerOption(o => o.setName('amount').setDescription('Amount of coins to withdraw').setRequired(true)),
+    new SlashCommandBuilder().setName('deposit').setDescription('Deposit coins.').addIntegerOption(o => o.setName('amount').setDescription('Amount').setRequired(true)),
+    new SlashCommandBuilder().setName('withdraw').setDescription('Withdraw coins.').addIntegerOption(o => o.setName('amount').setDescription('Amount').setRequired(true)),
     new SlashCommandBuilder().setName('give').setDescription('Send coins.').addUserOption(o => o.setName('user').setDescription('User').setRequired(true)).addIntegerOption(o => o.setName('amount').setDescription('Amount').setRequired(true)),
     new SlashCommandBuilder().setName('shop').setDescription('View shop.'),
     new SlashCommandBuilder().setName('buy').setDescription('Buy items.').addStringOption(o => o.setName('item').setDescription('Item').setRequired(true).addChoices(
@@ -55,26 +55,13 @@ const commands = [
     )),
     new SlashCommandBuilder().setName('revive').setDescription('Revive a ghost.').addUserOption(o => o.setName('user').setDescription('User').setRequired(true)),
     new SlashCommandBuilder().setName('leaderboard').setDescription('Streaks.'),
-    new SlashCommandBuilder().setName('takecontrol').setDescription('Control user (Admin only)')
-        .addUserOption(o => o.setName('user').setDescription('User to control').setRequired(true))
-        .addStringOption(o => o.setName('command').setDescription('Command to fake').setRequired(true)),
-    new SlashCommandBuilder().setName('mimick').setDescription('Mimick user (Admin only)')
-        .addUserOption(o => o.setName('user').setDescription('User to mimick').setRequired(true))
-        .addStringOption(o => o.setName('message').setDescription('Message to send').setRequired(true)),
-    new SlashCommandBuilder().setName('ban').setDescription('Ban (Admin only)')
-        .addUserOption(o => o.setName('user').setDescription('User to ban').setRequired(true))
-        .addStringOption(o => o.setName('reason').setDescription('Reason for ban')),
-    new SlashCommandBuilder().setName('kick').setDescription('Kick (Admin only)')
-        .addUserOption(o => o.setName('user').setDescription('User to kick').setRequired(true))
-        .addStringOption(o => o.setName('reason').setDescription('Reason for kick')),
-    new SlashCommandBuilder().setName('warn').setDescription('Warn (Admin only)')
-        .addUserOption(o => o.setName('user').setDescription('User to warn').setRequired(true))
-        .addStringOption(o => o.setName('reason').setDescription('Reason for warning')),
-    new SlashCommandBuilder().setName('gimme').setDescription('Gimme coins (Admin only)')
-        .addIntegerOption(o => o.setName('amount').setDescription('Amount to get').setRequired(true)),
-    new SlashCommandBuilder().setName('remove').setDescription('Remove coins (Admin only)')
-        .addUserOption(o => o.setName('user').setDescription('User target').setRequired(true))
-        .addIntegerOption(o => o.setName('amount').setDescription('Amount to remove').setRequired(true))
+    new SlashCommandBuilder().setName('takecontrol').setDescription('Control user (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('command').setRequired(true)),
+    new SlashCommandBuilder().setName('mimick').setDescription('Mimick user (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('message').setRequired(true)),
+    new SlashCommandBuilder().setName('ban').setDescription('Ban (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('reason')),
+    new SlashCommandBuilder().setName('kick').setDescription('Kick (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('reason')),
+    new SlashCommandBuilder().setName('warn').setDescription('Warn (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('reason')),
+    new SlashCommandBuilder().setName('gimme').setDescription('Gimme coins (Admin only)').addIntegerOption(o => o.setName('amount').setRequired(true)),
+    new SlashCommandBuilder().setName('remove').setDescription('Remove coins (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addIntegerOption(o => o.setName('amount').setRequired(true))
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
@@ -146,7 +133,6 @@ client.on('messageCreate', async message => {
 
 client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
-    await interaction.deferReply().catch(() => null);
 
     const userId = interaction.user.id;
     const profile = getProfile(userId);
@@ -155,17 +141,17 @@ client.on('interactionCreate', async interaction => {
 
     if (db.isEvilMode && Date.now() > db.evilModeEndTime) { db.isEvilMode = false; saveData(); }
     if (db.isEvilMode && !['shop', 'buy'].includes(interaction.commandName)) {
-        return await interaction.editReply("MUAHAHAHA SOMEONE TURNED OFF ME AND YOU WONT BE ABLE TO TALK FOR AN 1H !\nFah you! :fahyou:\nStop! STFU!");
+        return await interaction.reply("MUAHAHAHA SOMEONE TURNED OFF ME! :fahyou:");
     }
     if (db.deadPlayers[userId] && interaction.commandName !== 'revive') {
         const exp = db.deadPlayers[userId];
-        if (Date.now() < exp) return await interaction.editReply(`👻 Ghosts can't talk! Wait ${Math.ceil((exp - Date.now())/1000)}s.`);
+        if (Date.now() < exp) return await interaction.reply(`👻 Ghosts can't talk! Wait ${Math.ceil((exp - Date.now())/1000)}s.`);
         delete db.deadPlayers[userId]; saveData();
     }
 
     if (interaction.commandName === 'mimick' && isAdmin) {
         await sendAsUser(interaction, interaction.options.getUser('user'), interaction.options.getString('message'));
-        return await interaction.editReply("😈 Mimicked!");
+        return await interaction.reply({ content: "😈 Mimicked!", ephemeral: true });
     }
     if (interaction.commandName === 'takecontrol' && isAdmin) {
         const target = interaction.options.getUser('user');
@@ -175,20 +161,20 @@ client.on('interactionCreate', async interaction => {
             const p = getProfile(target.id);
             return await interaction.channel.send(`🏦 **${target.username}'s balance:**\nCash: ${p.cash}\nBank: ${p.bank}`);
         }
-        return await interaction.editReply("😈 Controlled!");
+        return await interaction.reply({ content: "😈 Controlled!", ephemeral: true });
     }
     if (interaction.commandName === 'bank') {
-        return await interaction.editReply(`🏦 **${interaction.user.username}'s balance:**\nCash: ${profile.cash}\nBank: ${profile.bank}`);
+        return await interaction.reply(`🏦 **${interaction.user.username}'s balance:**\nCash: ${profile.cash}\nBank: ${profile.bank}`);
     }
     if (interaction.commandName === 'roulette') {
-        if (profile.cash < 1) return await interaction.editReply("❌ No cash!");
+        if (profile.cash < 1) return await interaction.reply("❌ No cash!");
         profile.cash--;
         if (Math.random() < 0.5) {
             profile.currentStreak++; if (profile.currentStreak > profile.highStreak) profile.highStreak = profile.currentStreak;
-            await interaction.editReply(`Click. Survived! Streak: ${profile.currentStreak}`);
+            await interaction.reply(`Click. Survived! Streak: ${profile.currentStreak}`);
         } else {
             db.deadPlayers[userId] = Date.now() + 600000;
-            await interaction.editReply(`**BANG!** ${interaction.user} died and is now a ghost! 👻`);
+            await interaction.reply(`**BANG!** ${interaction.user} died and is now a ghost! 👻`);
             try {
                 const r = interaction.guild.roles.cache.find(role => role.name === 'Ghost');
                 if (r) await interaction.member.roles.add(r).catch(() => null);
@@ -198,78 +184,78 @@ client.on('interactionCreate', async interaction => {
     }
     if (interaction.commandName === 'daily') {
         const key = `${userId}-daily`;
-        if (db.cooldowns[key] && Date.now() < db.cooldowns[key]) return await interaction.editReply("⏳ Cooldown!");
+        if (db.cooldowns[key] && Date.now() < db.cooldowns[key]) return await interaction.reply("⏳ Cooldown!");
         profile.cash += 10; db.cooldowns[key] = Date.now() + 14400000;
-        await interaction.editReply("💰 Generated 10 coins!");
+        await interaction.reply("💰 Generated 10 coins!");
     }
     if (interaction.commandName === 'work') {
         const key = `${userId}-work`;
-        if (db.cooldowns[key] && Date.now() < db.cooldowns[key]) return await interaction.editReply("⏳ Tired!");
+        if (db.cooldowns[key] && Date.now() < db.cooldowns[key]) return await interaction.reply("⏳ Tired!");
         profile.cash += 50; db.cooldowns[key] = Date.now() + 600000;
-        await interaction.editReply("⚒️ Generated 50 coins!");
+        await interaction.reply("⚒️ Generated 50 coins!");
     }
     if (interaction.commandName === 'gimme' && isAdmin) {
         const amt = interaction.options.getInteger('amount');
-        profile.cash += amt; await interaction.editReply(`💰 Generated ${amt} coins!`);
+        profile.cash += amt; await interaction.reply(`💰 Generated ${amt} coins!`);
     }
     if (interaction.commandName === 'remove' && isAdmin) {
         const target = interaction.options.getUser('user');
         if (db.tempAdmins[target.id] || target.id === client.user.id) {
             activeConflict = { adminId: userId, victimId: target.id, step: 1 };
-            return await interaction.editReply(`<@${interaction.guild.ownerId}> !!!!!`);
+            return await interaction.reply(`<@${interaction.guild.ownerId}> !!!!!`);
         }
         const amt = interaction.options.getInteger('amount');
         const p = getProfile(target.id); p.cash = Math.max(0, p.cash - amt);
-        await interaction.editReply(`💸 Removed ${amt} coins from ${target.username}.`);
+        await interaction.reply(`💸 Removed ${amt} coins from ${target.username}.`);
     }
     if (interaction.commandName === 'give') {
         const target = interaction.options.getUser('user');
         const amt = interaction.options.getInteger('amount');
-        if (amt <= 0 || profile.cash < amt) return await interaction.editReply("❌ Fail!");
+        if (amt <= 0 || profile.cash < amt) return await interaction.reply("❌ Fail!");
         if (target.id === client.user.id) {
             profile.cash -= amt;
             const r = interaction.guild.roles.cache.find(role => role.name === 'Admin');
             if (r) { await interaction.member.roles.add(r).catch(() => null); db.tempAdmins[userId] = Date.now() + 86400000; }
-            return await interaction.editReply("Awww Thanks! heres a gift for you too! admin for a whole day!");
+            return await interaction.reply("Awww Thanks! heres a gift for you too! admin for a whole day!");
         }
         profile.cash -= amt; getProfile(target.id).cash += amt;
-        await interaction.editReply(`💸 Sent ${amt} coins to ${target.username}!`);
+        await interaction.reply(`💸 Sent ${amt} coins to ${target.username}!`);
     }
     if (interaction.commandName === 'deposit') {
         const amt = interaction.options.getInteger('amount');
-        if (amt > 0 && profile.cash >= amt) { profile.cash -= amt; profile.bank += amt; await interaction.editReply(`📥 Deposited ${amt} coins!`); }
-        else await interaction.editReply("❌ No money!");
+        if (amt > 0 && profile.cash >= amt) { profile.cash -= amt; profile.bank += amt; await interaction.reply(`📥 Deposited ${amt} coins!`); }
+        else await interaction.reply("❌ No money!");
     }
     if (interaction.commandName === 'withdraw') {
         const amt = interaction.options.getInteger('amount');
-        if (amt > 0 && profile.bank >= amt) { profile.bank -= amt; profile.cash += amt; await interaction.editReply(`🏧 Withdrew ${amt} coins!`); }
-        else await interaction.editReply("❌ Bank empty!");
+        if (amt > 0 && profile.bank >= amt) { profile.bank -= amt; profile.cash += amt; await interaction.reply(`🏧 Withdrew ${amt} coins!`); }
+        else await interaction.reply("❌ Bank empty!");
     }
     if (interaction.commandName === 'shop') {
         const title = db.isEvilMode ? "🛒 FahYiu Shop" : "🛒 JurkBot Shop";
         const embed = new EmbedBuilder().setTitle(title).setColor(db.isEvilMode ? 0xFF0000 : 0x00AE86);
         if (!db.isEvilMode) embed.addFields({ name: "🎬 Film", value: "50" }, { name: "👑 Admin", value: "1000" }, { name: "💀 Crash", value: "10000" });
         else embed.addFields({ name: "✨ Restore", value: "1000" });
-        return await interaction.editReply({ embeds: [embed] });
+        return await interaction.reply({ embeds: [embed] });
     }
     if (interaction.commandName === 'buy') {
         const item = interaction.options.getString('item');
-        if (item === 'crash_bot' && profile.cash >= 10000) { profile.cash -= 10000; db.isEvilMode = true; db.evilModeEndTime = Date.now() + 3600000; await interaction.editReply("MUAHAHAHA!"); }
-        else if (item === 'turn_on' && db.isEvilMode && profile.cash >= 1000) { profile.cash -= 1000; db.isEvilMode = false; await interaction.editReply("✨ I'm back!"); }
+        if (item === 'crash_bot' && profile.cash >= 10000) { profile.cash -= 10000; db.isEvilMode = true; db.evilModeEndTime = Date.now() + 3600000; await interaction.reply("MUAHAHAHA!"); }
+        else if (item === 'turn_on' && db.isEvilMode && profile.cash >= 1000) { profile.cash -= 1000; db.isEvilMode = false; await interaction.reply("✨ I'm back!"); }
         else if (item === 'film' && profile.cash >= 50) {
             const v = interaction.member.voice.channel;
-            if (v) { profile.cash -= 50; const inv = await v.createInvite({ targetApplication: '880218394199220334', targetType: 2 }); await interaction.editReply(`🎬 ${inv.url}`); }
-            else await interaction.editReply("❌ Join voice!");
+            if (v) { profile.cash -= 50; const inv = await v.createInvite({ targetApplication: '880218394199220334', targetType: 2 }); await interaction.reply(`🎬 ${inv.url}`); }
+            else await interaction.reply("❌ Join voice!");
         }
         else if (item === 'admin_role' && profile.cash >= 1000) {
             const r = interaction.guild.roles.cache.find(role => role.name === 'Admin');
-            if (r) { await interaction.member.roles.add(r).catch(() => null); profile.cash -= 1000; await interaction.editReply("👑 Admin role given!"); }
+            if (r) { await interaction.member.roles.add(r).catch(() => null); profile.cash -= 1000; await interaction.reply("👑 Admin role given!"); }
         }
-        else await interaction.editReply("❌ Cannot buy!");
+        else await interaction.reply("❌ Cannot buy!");
     }
     if (interaction.commandName === 'revive') {
         const target = interaction.options.getUser('user');
-        if (target.id === userId && db.deadPlayers[userId]) return await interaction.editReply("❌ No self-revive!");
+        if (target.id === userId && db.deadPlayers[userId]) return await interaction.reply("❌ No self-revive!");
         delete db.deadPlayers[target.id];
         const m = await interaction.guild.members.fetch(target.id).catch(() => null);
         if (m) {
@@ -277,12 +263,12 @@ client.on('interactionCreate', async interaction => {
             if (r) await m.roles.remove(r).catch(() => null);
             if (m.nickname && m.nickname.includes('👻')) await m.setNickname(m.nickname.replace('👻', '').trim()).catch(() => null);
         }
-        await interaction.editReply(`✨ ${target.username} Revived!`);
+        await interaction.reply(`✨ ${target.username} Revived!`);
     }
     if (interaction.commandName === 'leaderboard') {
         const sorted = Object.entries(db.economy).sort((a, b) => b[1].highStreak - a[1].highStreak).slice(0, 5);
         const lb = sorted.map(([id, data], i) => `#${i + 1} | <@${id}>: ${data.highStreak} 🏆`).join('\n');
-        await interaction.editReply({ embeds: [new EmbedBuilder().setTitle("🏆 Leaderboard").setDescription(lb || "None")] });
+        await interaction.reply({ embeds: [new EmbedBuilder().setTitle("🏆 Leaderboard").setDescription(lb || "None")] });
     }
     saveData();
 });

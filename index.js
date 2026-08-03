@@ -43,8 +43,8 @@ const commands = [
     new SlashCommandBuilder().setName('daily').setDescription('Claim 10 coins!'),
     new SlashCommandBuilder().setName('work').setDescription('Work for 50 coins!'),
     new SlashCommandBuilder().setName('bank').setDescription('Check balance.'),
-    new SlashCommandBuilder().setName('deposit').setDescription('Deposit coins.').addIntegerOption(o => o.setName('amount').setDescription('Amount').setRequired(true)),
-    new SlashCommandBuilder().setName('withdraw').setDescription('Withdraw coins.').addIntegerOption(o => o.setName('amount').setDescription('Amount').setRequired(true)),
+    new SlashCommandBuilder().setName('deposit').setDescription('Deposit coins.').addIntegerOption(o => o.setName('amount').setDescription('Amount of coins to deposit').setRequired(true)),
+    new SlashCommandBuilder().setName('withdraw').setDescription('Withdraw coins.').addIntegerOption(o => o.setName('amount').setDescription('Amount of coins to withdraw').setRequired(true)),
     new SlashCommandBuilder().setName('give').setDescription('Send coins.').addUserOption(o => o.setName('user').setDescription('User').setRequired(true)).addIntegerOption(o => o.setName('amount').setDescription('Amount').setRequired(true)),
     new SlashCommandBuilder().setName('shop').setDescription('View shop.'),
     new SlashCommandBuilder().setName('buy').setDescription('Buy items.').addStringOption(o => o.setName('item').setDescription('Item').setRequired(true).addChoices(
@@ -55,13 +55,26 @@ const commands = [
     )),
     new SlashCommandBuilder().setName('revive').setDescription('Revive a ghost.').addUserOption(o => o.setName('user').setDescription('User').setRequired(true)),
     new SlashCommandBuilder().setName('leaderboard').setDescription('Streaks.'),
-    new SlashCommandBuilder().setName('takecontrol').setDescription('Control user (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('command').setRequired(true)),
-    new SlashCommandBuilder().setName('mimick').setDescription('Mimick user (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('message').setRequired(true)),
-    new SlashCommandBuilder().setName('ban').setDescription('Ban (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('reason')),
-    new SlashCommandBuilder().setName('kick').setDescription('Kick (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('reason')),
-    new SlashCommandBuilder().setName('warn').setDescription('Warn (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addStringOption(o => o.setName('reason')),
-    new SlashCommandBuilder().setName('gimme').setDescription('Gimme coins (Admin only)').addIntegerOption(o => o.setName('amount').setRequired(true)),
-    new SlashCommandBuilder().setName('remove').setDescription('Remove coins (Admin only)').addUserOption(o => o.setName('user').setRequired(true)).addIntegerOption(o => o.setName('amount').setRequired(true))
+    new SlashCommandBuilder().setName('takecontrol').setDescription('Control user (Admin only)')
+        .addUserOption(o => o.setName('user').setDescription('User to control').setRequired(true))
+        .addStringOption(o => o.setName('command').setDescription('Command to fake').setRequired(true)),
+    new SlashCommandBuilder().setName('mimick').setDescription('Mimick user (Admin only)')
+        .addUserOption(o => o.setName('user').setDescription('User to mimick').setRequired(true))
+        .addStringOption(o => o.setName('message').setDescription('Message to send').setRequired(true)),
+    new SlashCommandBuilder().setName('ban').setDescription('Ban (Admin only)')
+        .addUserOption(o => o.setName('user').setDescription('User to ban').setRequired(true))
+        .addStringOption(o => o.setName('reason').setDescription('Reason for ban')),
+    new SlashCommandBuilder().setName('kick').setDescription('Kick (Admin only)')
+        .addUserOption(o => o.setName('user').setDescription('User to kick').setRequired(true))
+        .addStringOption(o => o.setName('reason').setDescription('Reason for kick')),
+    new SlashCommandBuilder().setName('warn').setDescription('Warn (Admin only)')
+        .addUserOption(o => o.setName('user').setDescription('User to warn').setRequired(true))
+        .addStringOption(o => o.setName('reason').setDescription('Reason for warning')),
+    new SlashCommandBuilder().setName('gimme').setDescription('Gimme coins (Admin only)')
+        .addIntegerOption(o => o.setName('amount').setDescription('Amount to get').setRequired(true)),
+    new SlashCommandBuilder().setName('remove').setDescription('Remove coins (Admin only)')
+        .addUserOption(o => o.setName('user').setDescription('User target').setRequired(true))
+        .addIntegerOption(o => o.setName('amount').setDescription('Amount to remove').setRequired(true))
 ].map(c => c.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
@@ -142,7 +155,7 @@ client.on('interactionCreate', async interaction => {
 
     if (db.isEvilMode && Date.now() > db.evilModeEndTime) { db.isEvilMode = false; saveData(); }
     if (db.isEvilMode && !['shop', 'buy'].includes(interaction.commandName)) {
-        return await interaction.editReply("MUAHAHAHA SOMEONE TURNED OFF ME! :fahyou:");
+        return await interaction.editReply("MUAHAHAHA SOMEONE TURNED OFF ME AND YOU WONT BE ABLE TO TALK FOR AN 1H !\nFah you! :fahyou:\nStop! STFU!");
     }
     if (db.deadPlayers[userId] && interaction.commandName !== 'revive') {
         const exp = db.deadPlayers[userId];
